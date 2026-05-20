@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <title>ACP — Simulador de Esclusas</title>
+   <style>
+      * {
+         box-sizing: border-box;
+         margin: 0;
+         padding: 0;
+      }
+
+      body {
+         background: #f0f4f8;
+         font-family: 'Segoe UI', Arial, sans-serif;
+         min-height: 100vh;
+         display: flex;
+         flex-direction: column;
+      }
+
+      /* ── Navbar ── */
+      .navbar {
+         background: linear-gradient(135deg, #003d82 0%, #001a33 100%);
+         padding: 0 24px;
+         display: flex;
+         align-items: center;
+         height: 60px;
+         box-shadow: 0 2px 12px rgba(0, 61, 130, 0.3);
+         border-bottom: 3px solid #ffffff;
+         position: sticky;
+         top: 0;
+         z-index: 100;
+      }
+
+      .navbar-brand {
+         display: flex;
+         align-items: center;
+         gap: 12px;
+      }
+
+      .navbar-brand .logo-text {
+         font-size: 18px;
+         font-weight: 800;
+         color: #ffffff;
+         letter-spacing: 2px;
+         text-transform: uppercase;
+      }
+
+      .navbar-brand .logo-sub {
+         font-size: 11px;
+         color: rgba(255, 255, 255, 0.7);
+         letter-spacing: 0.5px;
+      }
+
+      /* ── Contenido principal ── */
+      .main-content {
+         flex: 1;
+         display: flex;
+         flex-direction: column;
+      }
+
+      /* ── Pantalla de bienvenida ── */
+      .welcome {
+         flex: 1;
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         justify-content: center;
+         text-align: center;
+         padding: 40px;
+      }
+
+      .welcome h2 {
+         font-size: 28px;
+         font-weight: 700;
+         color: #003d82;
+         margin-bottom: 12px;
+      }
+
+      .welcome p {
+         font-size: 15px;
+         color: #64748b;
+         max-width: 500px;
+         line-height: 1.6;
+         margin-bottom: 32px;
+      }
+
+      .card-grid {
+         display: grid;
+         grid-template-columns: repeat(3, 1fr);
+         gap: 20px;
+         max-width: 800px;
+      }
+
+      .project-card {
+         background: #ffffff;
+         border-radius: 16px;
+         padding: 28px 20px;
+         text-decoration: none;
+         border: 2px solid #e0e7ff;
+         box-shadow: 0 4px 16px rgba(0, 61, 130, 0.06);
+         transition: all 0.25s;
+         cursor: pointer;
+         text-align: center;
+      }
+
+      .project-card:hover {
+         border-color: #003d82;
+         transform: translateY(-4px);
+         box-shadow: 0 12px 32px rgba(0, 61, 130, 0.15);
+      }
+
+      .project-card .card-icon {
+         font-size: 40px;
+         margin-bottom: 14px;
+      }
+
+      .project-card h3 {
+         font-size: 16px;
+         font-weight: 700;
+         color: #003d82;
+         margin-bottom: 6px;
+      }
+
+      .project-card p {
+         font-size: 12px;
+         color: #64748b;
+      }
+
+      /* ── Footer ── */
+      .footer {
+         text-align: center;
+         padding: 12px;
+         font-size: 11px;
+         color: #94a3b8;
+         border-top: 1px solid #e5e7eb;
+         background: #ffffff;
+      }
+   </style>
+</head>
+
+<body>
+
+   <!-- ══════════════════ NAVBAR ══════════════════ -->
+   <nav class="navbar">
+      <div class="navbar-brand">
+         <div>
+            <div class="logo-text">ACP Canal de Panam&aacute;</div>
+            <div class="logo-sub">Simulador de Diagramas El&eacute;ctricos</div>
+         </div>
+      </div>
+   </nav>
+
+   <!-- ══════════════════ CONTENIDO ══════════════════ -->
+   <div class="main-content" id="main-content">
+
+      <div class="welcome" id="welcome-screen">
+         <img src="general_src/img/acp_logo.png" alt="Logo ACP" style="width: 15em; height: auto;">
+
+         <h2>Simulador de Esclusas</h2>
+         <p>Selecciona una esclusa para abrir su diagrama el&eacute;ctrico interactivo.</p>
+
+         <div class="card-grid">
+            <a class="project-card" href="proyectos/miraflores/index.html">
+               <div class="card-icon">
+                  <img src="proyectos/miraflores/img_general/icono-esclusas.png" alt="Icono de esclusas Miraflores"
+                     style="width: 2em; height: 2em;">
+               </div>
+               <h3>Esclusa de Miraflores</h3>
+               <p>Diagrama el&eacute;ctrico — Pac&iacute;fico</p>
+            </a>
+            <a class="project-card" href="proyectos/gatun/index.html">
+               <div class="card-icon">
+                  <img src="proyectos/gatun/img_general/icono-esclusas.png" alt="Icono de esclusas Gatun"
+                     style="width: 2em; height: 2em;">
+               </div>
+               <h3>Esclusa de Gat&uacute;n</h3>
+               <p>Diagrama el&eacute;ctrico — Atl&aacute;ntico</p>
+            </a>
+            <a class="project-card" href="proyectos/pedro-miguel/index.html">
+               <div class="card-icon">
+                  <img src="proyectos/pedro-miguel/img_general/icono-esclusas.png" alt="Icono de esclusas Miraflores"
+                     style="width: 2em; height: 2em;">
+               </div>
+               <h3>Esclusa de Pedro Miguel</h3>
+               <p>Diagrama el&eacute;ctrico — Pac&iacute;fico</p>
+            </a>
+         </div>
+      </div>
+
+   </div>
+
+   <!-- ══════════════════ FOOTER ══════════════════ -->
+   <div class="footer">
+      Autoridad del Canal de Panam&aacute; &mdash; Divisi&oacute;n de Electricidad y Automatizaci&oacute;n
+   </div>
+
+</body>
+</html>

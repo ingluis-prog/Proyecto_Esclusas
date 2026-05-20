@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Datasheets & Documentación - Miraflores</title>
+   <link rel="stylesheet" href="css/complementos.css">
+</head>
+<body>
+
+   <!-- ══════════════════ NAVBAR ══════════════════ -->
+   <nav class="navbar">
+      <div class="navbar-brand">
+         <a href="index.html" class="back-btn">◀ Volver</a>
+         <div>
+            <div class="logo-text">📄 Datasheets & Documentación</div>
+            <div class="logo-sub">Esclusa de Miraflores</div>
+         </div>
+      </div>
+   </nav>
+
+   <!-- ══════════════════ CONTENIDO ══════════════════ -->
+   <div class="main-content">
+      <div class="detail-container">
+         <div class="detail-header">
+            <h2>Datasheets & Documentación Técnica</h2>
+            <p>Gestiona archivos PDF y enlaces a documentación técnica de equipos eléctricos.</p>
+         </div>
+
+         <!-- Botón para agregar datasheets -->
+         <button class="btn-add-form" onclick="toggleFormulario('form-datasheet')">
+            ➕ Agregar Nuevo Documento
+         </button>
+
+         <!-- Formulario para agregar/editar datasheets (Colapsable) -->
+         <div class="form-section" style="padding: 0; margin-bottom: 24px;">
+            <div class="form-content" id="form-datasheet">
+               <form id="formulario-datasheet">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                     <div class="form-group">
+                        <label>Nombre del Equipo *</label>
+                        <input type="text" id="equipo-datasheet" placeholder="Ej: Interruptor INT6A785N" required>
+                     </div>
+
+                     <div class="form-group">
+                        <label>Tipo de Documento *</label>
+                        <select id="tipo-datasheet" required>
+                           <option value="">Selecciona un tipo...</option>
+                           <option value="Datasheet">Datasheet</option>
+                           <option value="Manual de Usuario">Manual de Usuario</option>
+                           <option value="Esquema Eléctrico">Esquema Eléctrico</option>
+                           <option value="Especificaciones Técnicas">Especificaciones Técnicas</option>
+                           <option value="Certificado">Certificado</option>
+                           <option value="Guía de Instalación">Guía de Instalación</option>
+                           <option value="Otro">Otro</option>
+                        </select>
+                     </div>
+
+                     <div class="form-group">
+                        <label>Fabricante</label>
+                        <input type="text" id="fabricante-datasheet" placeholder="Ej: ABB, Siemens, Eaton">
+                     </div>
+
+                     <div class="form-group">
+                        <label>Modelo</label>
+                        <input type="text" id="modelo-datasheet" placeholder="Ej: VD4 10kA">
+                     </div>
+                  </div>
+
+                  <div class="form-group">
+                     <label>¿Cómo deseas agregar el documento?</label>
+                     <div style="display: flex; gap: 12px; margin-top: 8px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                           <input type="radio" name="tipo-archivo" value="pdf" checked> Subir archivo PDF
+                        </label>
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                           <input type="radio" name="tipo-archivo" value="enlace"> Enlace del fabricante
+                        </label>
+                     </div>
+                  </div>
+
+                  <!-- Opción PDF -->
+                  <div id="opcion-pdf" class="form-group">
+                     <label>Archivo PDF</label>
+                     <div class="file-input-wrapper">
+                        <input type="file" id="pdf-datasheet" accept=".pdf">
+                        <label for="pdf-datasheet" class="file-input-label">
+                           📁 Haz clic o arrastra un PDF aquí
+                        </label>
+                     </div>
+                  </div>
+
+                  <!-- Opción Enlace -->
+                  <div id="opcion-enlace" class="form-group" style="display:none;">
+                     <label>URL del Documento</label>
+                     <input type="url" id="enlace-datasheet" placeholder="https://www.fabricante.com/datasheet.pdf">
+                  </div>
+
+                  <div class="form-buttons">
+                     <button type="submit" class="btn btn-primary" id="btn-submit-datasheet">➕ Agregar Documento</button>
+                     <button type="reset" class="btn btn-secondary">🔄 Limpiar</button>
+                     <button type="button" class="btn btn-secondary" onclick="cancelarEdicion()">✕ Cancelar</button>
+                  </div>
+               </form>
+            </div>
+         </div>
+
+         <!-- Lista de datasheets -->
+         <div class="form-section">
+            <h3>Documentos Registrados</h3>
+            <div id="lista-datasheets" class="items-list"></div>
+         </div>
+      </div>
+   </div>
+
+   <!-- ══════════════════ FOOTER ══════════════════ -->
+   <div class="footer">
+      Autoridad del Canal de Panamá — Complementos de Maniobras
+   </div>
+
+   <!-- ══════════════════ MODAL ══════════════════ -->
+   <div id="modal" class="modal">
+      <div class="modal-content">
+         <h3 id="modal-title">Confirmar acción</h3>
+         <p id="modal-message"></p>
+         <div class="modal-buttons">
+            <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+            <button id="modal-confirm" class="btn btn-danger">Eliminar</button>
+         </div>
+      </div>
+   </div>
+
+   <script src="js/auth.js"></script>
+   <script>
+      // Variables globales
+      let datasheetActual = null;
+      let editandoIndex = null;
+
+      // Cambiar entre PDF y Enlace
+      document.querySelectorAll('input[name="tipo-archivo"]').forEach(radio => {
+         radio.addEventListener('change', function() {
+            document.getElementById('opcion-pdf').style.display = this.value === 'pdf' ? 'block' : 'none';
+            document.getElementById('opcion-enlace').style.display = this.value === 'enlace' ? 'block' : 'none';
+         });
+      });
+
+      // Cargar datasheets desde localStorage
+      function cargarDatasheets() {
+         const datasheets = JSON.parse(localStorage.getItem('datasheets-miraflores') || '[]');
+         const listaDatasheets = document.getElementById('lista-datasheets');
+
+         listaDatasheets.innerHTML = '';
+
+         if (datasheets.length === 0) {
+            listaDatasheets.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>No hay datasheets registrados aún</p></div>';
+            return;
+         }
+
+         datasheets.forEach((doc, index) => {
+            const itemCard = document.createElement('div');
+            itemCard.className = 'item-card';
+
+            let tipoDoc = '';
+            if (doc.tipo === 'pdf') {
+               tipoDoc = `<p><strong>PDF:</strong> ${doc.pdf ? '✅ Archivo subido' : 'Sin archivo'}</p>`;
+            } else {
+               tipoDoc = `<p><strong>Enlace:</strong> <a href="${doc.enlace}" target="_blank" style="color: #0061c3;">Ver documento</a></p>`;
+            }
+
+            itemCard.innerHTML = `
+               <div class="item-info">
+                  <h4>${doc.equipo}</h4>
+                  <p><strong>Tipo:</strong> ${doc.tipoDoc}</p>
+                  <p><strong>Fabricante:</strong> ${doc.fabricante || 'N/A'}</p>
+                  <p><strong>Modelo:</strong> ${doc.modelo || 'N/A'}</p>
+                  ${tipoDoc}
+               </div>
+               <div class="item-actions">
+                  ${doc.tipo === 'pdf' && doc.pdf ? `<button class="item-edit" onclick="descargarPDF(${index})">📥 Descargar</button>` : ''}
+                  <button class="item-edit" onclick="editarDatasheet(${index})">✏️ Editar</button>
+                  <button class="item-delete" onclick="eliminarDatasheet(${index})">🗑️ Eliminar</button>
+               </div>
+            `;
+            listaDatasheets.appendChild(itemCard);
+         });
+      }
+
+      // Toggle formulario
+      function toggleFormulario(id) {
+         const elemento = document.getElementById(id);
+         elemento.classList.toggle('active');
+      }
+
+      // Editar datasheet
+      function editarDatasheet(index) {
+         const datasheets = JSON.parse(localStorage.getItem('datasheets-miraflores') || '[]');
+         const doc = datasheets[index];
+
+         document.getElementById('equipo-datasheet').value = doc.equipo;
+         document.getElementById('tipo-datasheet').value = doc.tipoDoc;
+         document.getElementById('fabricante-datasheet').value = doc.fabricante;
+         document.getElementById('modelo-datasheet').value = doc.modelo;
+
+         // Seleccionar tipo de archivo
+         document.querySelector(`input[name="tipo-archivo"][value="${doc.tipo}"]`).checked = true;
+         document.getElementById('opcion-pdf').style.display = doc.tipo === 'pdf' ? 'block' : 'none';
+         document.getElementById('opcion-enlace').style.display = doc.tipo === 'enlace' ? 'block' : 'none';
+
+         if (doc.tipo === 'enlace') {
+            document.getElementById('enlace-datasheet').value = doc.enlace;
+         }
+
+         document.getElementById('btn-submit-datasheet').textContent = '💾 Actualizar Documento';
+         editandoIndex = index;
+
+         const formEl = document.getElementById('form-datasheet');
+         if (!formEl.classList.contains('active')) toggleFormulario('form-datasheet');
+         document.querySelector('.btn-add-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      // Agregar/Actualizar datasheet
+      document.getElementById('formulario-datasheet').addEventListener('submit', function(e) {
+         e.preventDefault();
+
+         const tipoArchivo = document.querySelector('input[name="tipo-archivo"]:checked').value;
+
+         if (tipoArchivo === 'pdf') {
+            const pdfInput = document.getElementById('pdf-datasheet');
+            if (pdfInput.files.length === 0 && editandoIndex === null) {
+               alert('Por favor selecciona un archivo PDF');
+               return;
+            }
+
+            if (pdfInput.files.length > 0) {
+               const reader = new FileReader();
+               reader.onload = function(e) {
+                  guardarDatasheet(e.target.result);
+               };
+               reader.readAsDataURL(pdfInput.files[0]);
+            } else {
+               guardarDatasheet(null);
+            }
+         } else {
+            const enlace = document.getElementById('enlace-datasheet').value;
+            if (!enlace) {
+               alert('Por favor ingresa una URL válida');
+               return;
+            }
+            guardarDatasheet(null, enlace);
+         }
+      });
+
+      function guardarDatasheet(pdf = null, enlace = null) {
+         const tipoArchivo = document.querySelector('input[name="tipo-archivo"]:checked').value;
+         const datasheets = JSON.parse(localStorage.getItem('datasheets-miraflores') || '[]');
+
+         const doc = {
+            equipo: document.getElementById('equipo-datasheet').value,
+            tipoDoc: document.getElementById('tipo-datasheet').value,
+            fabricante: document.getElementById('fabricante-datasheet').value,
+            modelo: document.getElementById('modelo-datasheet').value,
+            tipo: tipoArchivo,
+            pdf: pdf || (editandoIndex !== null ? datasheets[editandoIndex].pdf : null),
+            enlace: enlace || null
+         };
+
+         if (editandoIndex !== null) {
+            datasheets[editandoIndex] = doc;
+            alert('✅ Documento actualizado correctamente');
+         } else {
+            datasheets.push(doc);
+            alert('✅ Documento agregado correctamente');
+         }
+
+         localStorage.setItem('datasheets-miraflores', JSON.stringify(datasheets));
+         document.getElementById('formulario-datasheet').reset();
+         document.getElementById('btn-submit-datasheet').textContent = '➕ Agregar Documento';
+         editandoIndex = null;
+         cancelarEdicion();
+         cargarDatasheets();
+      }
+
+      // Descargar PDF
+      function descargarPDF(index) {
+         const datasheets = JSON.parse(localStorage.getItem('datasheets-miraflores') || '[]');
+         const doc = datasheets[index];
+
+         if (doc.pdf) {
+            const link = document.createElement('a');
+            link.href = doc.pdf;
+            link.download = `${doc.equipo}.pdf`;
+            link.click();
+         }
+      }
+
+      // Cancelar edición
+      function cancelarEdicion() {
+         document.getElementById('formulario-datasheet').reset();
+         document.getElementById('btn-submit-datasheet').textContent = '➕ Agregar Documento';
+         editandoIndex = null;
+         const formContent = document.getElementById('form-datasheet');
+         if (formContent.classList.contains('active')) {
+            toggleFormulario('form-datasheet');
+         }
+      }
+
+      // Eliminar datasheet
+      function eliminarDatasheet(index) {
+         datasheetActual = index;
+         document.getElementById('modal-title').textContent = 'Eliminar Documento';
+         document.getElementById('modal-message').textContent = '¿Estás seguro de que quieres eliminar este documento?';
+         document.getElementById('modal-confirm').onclick = function() {
+            const datasheets = JSON.parse(localStorage.getItem('datasheets-miraflores') || '[]');
+            datasheets.splice(datasheetActual, 1);
+            localStorage.setItem('datasheets-miraflores', JSON.stringify(datasheets));
+            cerrarModal();
+            cargarDatasheets();
+         };
+         abrirModal();
+      }
+
+      function abrirModal() {
+         document.getElementById('modal').classList.add('active');
+      }
+
+      function cerrarModal() {
+         document.getElementById('modal').classList.remove('active');
+      }
+
+      // Inicializar
+      document.addEventListener('DOMContentLoaded', cargarDatasheets);
+   </script>
+
+</body>
+</html>

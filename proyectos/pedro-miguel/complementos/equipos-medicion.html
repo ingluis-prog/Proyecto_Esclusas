@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Equipos de Medición - Pedro Miguel</title>
+   <link rel="stylesheet" href="css/complementos.css">
+</head>
+<body>
+
+   <!-- ══════════════════ NAVBAR ══════════════════ -->
+   <nav class="navbar">
+      <div class="navbar-brand">
+         <a href="index.html" class="back-btn">◀ Volver</a>
+         <div>
+            <div class="logo-text">📏 Equipos de Medición</div>
+            <div class="logo-sub">Esclusa de Pedro Miguel</div>
+         </div>
+      </div>
+   </nav>
+
+   <!-- ══════════════════ CONTENIDO ══════════════════ -->
+   <div class="main-content">
+      <div class="detail-container">
+         <div class="detail-header">
+            <h2>Equipos de Medición</h2>
+            <p>Registra voltímetros, amperímetros, óhmetros, analizadores de potencia y otros instrumentos de medición.</p>
+         </div>
+
+         <!-- Botón para agregar equipos -->
+         <button class="btn-add-form" onclick="toggleFormulario('form-medicion')">
+            ➕ Agregar Nuevo Equipo
+         </button>
+
+         <!-- Formulario para agregar/editar equipos (Colapsable) -->
+         <div class="form-section" style="padding: 0; margin-bottom: 24px;">
+            <div class="form-content" id="form-medicion">
+               <form id="formulario-medicion">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                     <div class="form-group">
+                        <label>Tipo de Equipo *</label>
+                        <select id="tipo-medicion" required>
+                           <option value="">Selecciona un tipo...</option>
+                           <option value="Voltímetro">Voltímetro</option>
+                           <option value="Amperímetro">Amperímetro</option>
+                           <option value="Óhmetro">Óhmetro</option>
+                           <option value="Multímetro">Multímetro</option>
+                           <option value="Pinza Amperimétrica">Pinza Amperimétrica</option>
+                           <option value="Analizador de Potencia">Analizador de Potencia</option>
+                           <option value="Osciloscopio">Osciloscopio</option>
+                           <option value="Medidor de Aislamiento">Medidor de Aislamiento</option>
+                           <option value="Otro">Otro</option>
+                        </select>
+                     </div>
+
+                     <div class="form-group">
+                        <label>Marca/Modelo *</label>
+                        <input type="text" id="marca-medicion" placeholder="Ej: Fluke, Hioki" required>
+                     </div>
+
+                     <div class="form-group">
+                        <label>Rango de Medición</label>
+                        <input type="text" id="rango-medicion" placeholder="Ej: 0-1000V AC/DC">
+                     </div>
+
+                     <div class="form-group">
+                        <label>Precisión</label>
+                        <input type="text" id="precision-medicion" placeholder="Ej: ±0.5%">
+                     </div>
+                  </div>
+
+                  <div class="form-group">
+                     <label>Especificaciones Técnicas</label>
+                     <textarea id="especificaciones-medicion" placeholder="Características técnicas adicionales"></textarea>
+                  </div>
+
+                  <div class="form-buttons">
+                     <button type="submit" class="btn btn-primary" id="btn-submit-medicion">➕ Agregar Equipo</button>
+                     <button type="reset" class="btn btn-secondary">🔄 Limpiar</button>
+                     <button type="button" class="btn btn-secondary" onclick="cancelarEdicion()">✕ Cancelar</button>
+                  </div>
+               </form>
+            </div>
+         </div>
+
+         <!-- Lista de equipos -->
+         <div class="form-section">
+            <h3>Equipos de Medición Registrados</h3>
+            <div id="lista-medicion" class="items-list"></div>
+         </div>
+      </div>
+   </div>
+
+   <!-- ══════════════════ FOOTER ══════════════════ -->
+   <div class="footer">
+      Autoridad del Canal de Panamá — Complementos de Maniobras
+   </div>
+
+   <!-- ══════════════════ MODAL ══════════════════ -->
+   <div id="modal" class="modal">
+      <div class="modal-content">
+         <h3 id="modal-title">Confirmar acción</h3>
+         <p id="modal-message"></p>
+         <div class="modal-buttons">
+            <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+            <button id="modal-confirm" class="btn btn-danger">Eliminar</button>
+         </div>
+      </div>
+   </div>
+
+   <script src="js/auth.js"></script>
+   <script>
+      // Variables globales
+      let equipoActual = null;
+      let editandoIndex = null;
+
+      // Cargar equipos desde localStorage
+      function cargarEquipos() {
+         const equipos = JSON.parse(localStorage.getItem('equipos-medicion-pedro-miguel') || '[]');
+         const listaEquipos = document.getElementById('lista-medicion');
+
+         listaEquipos.innerHTML = '';
+
+         if (equipos.length === 0) {
+            listaEquipos.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><p>No hay equipos de medición registrados aún</p></div>';
+            return;
+         }
+
+         equipos.forEach((equipo, index) => {
+            const itemCard = document.createElement('div');
+            itemCard.className = 'item-card';
+            itemCard.innerHTML = `
+               <div class="item-info">
+                  <h4>${equipo.tipo} - ${equipo.marca}</h4>
+                  <p>Rango: ${equipo.rango || 'N/A'}</p>
+                  <p>Precisión: ${equipo.precision || 'N/A'}</p>
+                  ${equipo.especificaciones ? `<p>${equipo.especificaciones}</p>` : ''}
+               </div>
+               <div class="item-actions">
+                  <button class="item-edit" onclick="editarEquipo(${index})">✏️ Editar</button>
+                  <button class="item-delete" onclick="eliminarEquipo(${index})">🗑️ Eliminar</button>
+               </div>
+            `;
+            listaEquipos.appendChild(itemCard);
+         });
+      }
+
+      // Toggle formulario
+      function toggleFormulario(id) {
+         const elemento = document.getElementById(id);
+         elemento.classList.toggle('active');
+      }
+
+      // Editar equipo
+      function editarEquipo(index) {
+         const equipos = JSON.parse(localStorage.getItem('equipos-medicion-pedro-miguel') || '[]');
+         const equipo = equipos[index];
+
+         document.getElementById('tipo-medicion').value = equipo.tipo;
+         document.getElementById('marca-medicion').value = equipo.marca;
+         document.getElementById('rango-medicion').value = equipo.rango;
+         document.getElementById('precision-medicion').value = equipo.precision;
+         document.getElementById('especificaciones-medicion').value = equipo.especificaciones;
+
+         document.getElementById('btn-submit-medicion').textContent = '💾 Actualizar Equipo';
+         editandoIndex = index;
+
+         const formEl = document.getElementById('form-medicion');
+         if (!formEl.classList.contains('active')) toggleFormulario('form-medicion');
+         document.querySelector('.btn-add-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      // Agregar/Actualizar equipo
+      document.getElementById('formulario-medicion').addEventListener('submit', function(e) {
+         e.preventDefault();
+
+         const equipos = JSON.parse(localStorage.getItem('equipos-medicion-pedro-miguel') || '[]');
+
+         const equipo = {
+            tipo: document.getElementById('tipo-medicion').value,
+            marca: document.getElementById('marca-medicion').value,
+            rango: document.getElementById('rango-medicion').value,
+            precision: document.getElementById('precision-medicion').value,
+            especificaciones: document.getElementById('especificaciones-medicion').value
+         };
+
+         if (editandoIndex !== null) {
+            equipos[editandoIndex] = equipo;
+            alert('✅ Equipo actualizado correctamente');
+         } else {
+            equipos.push(equipo);
+            alert('✅ Equipo de medición agregado correctamente');
+         }
+
+         localStorage.setItem('equipos-medicion-pedro-miguel', JSON.stringify(equipos));
+         document.getElementById('formulario-medicion').reset();
+         document.getElementById('btn-submit-medicion').textContent = '➕ Agregar Equipo';
+         editandoIndex = null;
+         cancelarEdicion();
+         cargarEquipos();
+      });
+
+      // Cancelar edición
+      function cancelarEdicion() {
+         document.getElementById('formulario-medicion').reset();
+         document.getElementById('btn-submit-medicion').textContent = '➕ Agregar Equipo';
+         editandoIndex = null;
+         const formContent = document.getElementById('form-medicion');
+         if (formContent.classList.contains('active')) {
+            toggleFormulario('form-medicion');
+         }
+      }
+
+      // Eliminar equipo
+      function eliminarEquipo(index) {
+         equipoActual = index;
+         document.getElementById('modal-title').textContent = 'Eliminar Equipo';
+         document.getElementById('modal-message').textContent = '¿Estás seguro de que quieres eliminar este equipo?';
+         document.getElementById('modal-confirm').onclick = function() {
+            const equipos = JSON.parse(localStorage.getItem('equipos-medicion-pedro-miguel') || '[]');
+            equipos.splice(equipoActual, 1);
+            localStorage.setItem('equipos-medicion-pedro-miguel', JSON.stringify(equipos));
+            cerrarModal();
+            cargarEquipos();
+         };
+         abrirModal();
+      }
+
+      function abrirModal() {
+         document.getElementById('modal').classList.add('active');
+      }
+
+      function cerrarModal() {
+         document.getElementById('modal').classList.remove('active');
+      }
+
+      // Inicializar
+      document.addEventListener('DOMContentLoaded', cargarEquipos);
+   </script>
+
+</body>
+</html>

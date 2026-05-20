@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Equipos de Protección Personal - Gatún</title>
+   <link rel="stylesheet" href="css/complementos.css">
+</head>
+<body>
+
+   <!-- ══════════════════ NAVBAR ══════════════════ -->
+   <nav class="navbar">
+      <div class="navbar-brand">
+         <a href="index.html" class="back-btn">◀ Volver</a>
+         <div>
+            <div class="logo-text">🥽 Equipos de Protección Personal</div>
+            <div class="logo-sub">Esclusa de Gatún</div>
+         </div>
+      </div>
+   </nav>
+
+   <!-- ══════════════════ CONTENIDO ══════════════════ -->
+   <div class="main-content">
+      <div class="detail-container">
+         <div class="detail-header">
+            <h2>Equipos de Protección Personal (EPP)</h2>
+            <p>Gestiona cascos, guantes, gafas, arneses y otros equipos de seguridad.</p>
+         </div>
+
+         <!-- Botón para agregar EPP -->
+         <button class="btn-add-form" onclick="toggleFormulario('form-epp')">
+            ➕ Agregar Nuevo EPP
+         </button>
+
+         <!-- Formulario para agregar/editar EPP (Colapsable) -->
+         <div class="form-section" style="padding: 0; margin-bottom: 24px;">
+            <div class="form-content" id="form-epp">
+               <form id="formulario-epp">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                     <div class="form-group">
+                        <label>Tipo de EPP *</label>
+                        <select id="tipo-epp" required>
+                           <option value="">Selecciona un tipo...</option>
+                           <option value="Casco">Casco de Seguridad</option>
+                           <option value="Guantes">Guantes</option>
+                           <option value="Gafas">Gafas/Lentes</option>
+                           <option value="Arnés">Arnés de Seguridad</option>
+                           <option value="Chaleco">Chaleco Reflectivo</option>
+                           <option value="Respirador">Respirador/Mascarilla</option>
+                           <option value="Botas">Botas de Seguridad</option>
+                           <option value="Otro">Otro</option>
+                        </select>
+                     </div>
+
+                     <div class="form-group">
+                        <label>Marca/Modelo *</label>
+                        <input type="text" id="marca-epp" placeholder="Ej: 3M, Honeywell" required>
+                     </div>
+
+                     <div class="form-group">
+                        <label>Talla/Tamaño</label>
+                        <input type="text" id="talla-epp" placeholder="Ej: L, M, 42">
+                     </div>
+
+                     <div class="form-group">
+                        <label>Cantidad Disponible *</label>
+                        <input type="number" id="cantidad-epp" placeholder="Ej: 5" min="1" required>
+                     </div>
+                  </div>
+
+                  <div class="form-group">
+                     <label>Descripción / Especificaciones</label>
+                     <textarea id="descripcion-epp" placeholder="Notas adicionales sobre este EPP"></textarea>
+                  </div>
+
+                  <div class="form-group">
+                     <label>Foto del EPP</label>
+                     <div class="file-input-wrapper">
+                        <input type="file" id="foto-epp" accept="image/*">
+                        <label for="foto-epp" class="file-input-label">
+                           📷 Haz clic o arrastra una imagen aquí
+                        </label>
+                     </div>
+                  </div>
+
+                  <div class="form-buttons">
+                     <button type="submit" class="btn btn-primary" id="btn-submit-epp">➕ Agregar EPP</button>
+                     <button type="reset" class="btn btn-secondary">🔄 Limpiar</button>
+                     <button type="button" class="btn btn-secondary" onclick="cancelarEdicion()">✕ Cancelar</button>
+                  </div>
+               </form>
+            </div>
+         </div>
+
+         <!-- Lista de EPP agregados -->
+         <div class="form-section">
+            <h3>EPP Registrados</h3>
+            <div id="lista-epp" class="items-list"></div>
+         </div>
+
+      </div>
+   </div>
+
+   <!-- ══════════════════ FOOTER ══════════════════ -->
+   <div class="footer">
+      Autoridad del Canal de Panamá — Complementos de Maniobras
+   </div>
+
+   <!-- ══════════════════ MODAL ══════════════════ -->
+   <div id="modal" class="modal">
+      <div class="modal-content">
+         <h3 id="modal-title">Confirmar acción</h3>
+         <p id="modal-message"></p>
+         <div class="modal-buttons">
+            <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+            <button id="modal-confirm" class="btn btn-danger">Eliminar</button>
+         </div>
+      </div>
+   </div>
+
+   <script src="js/auth.js"></script>
+   <script>
+      // Variables globales
+      let eppActual = null;
+      let editandoIndex = null;
+
+      // Cargar EPP desde localStorage
+      function cargarEPP() {
+         const epps = JSON.parse(localStorage.getItem('epps-gatun') || '[]');
+         const listaEPP = document.getElementById('lista-epp');
+
+         listaEPP.innerHTML = '';
+
+         if (epps.length === 0) {
+            listaEPP.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📦</div><p>No hay EPP registrados aún</p></div>';
+            return;
+         }
+
+         epps.forEach((epp, index) => {
+            // Agregar a lista (tarjeta colapsable)
+            const itemCard = document.createElement('div');
+            itemCard.className = 'item-card-c';
+            const fotoHTML = epp.foto
+               ? `<img class="item-thumb" src="${epp.foto}" alt="${epp.tipo}">`
+               : `<div class="item-thumb-placeholder">📦</div>`;
+            const descripcionPreview = epp.descripcion
+               ? epp.descripcion
+               : `Talla: ${epp.talla || 'N/A'} • Cantidad: ${epp.cantidad}`;
+            itemCard.innerHTML = `
+               <div class="item-summary" onclick="toggleItemDetalle(this)">
+                  ${fotoHTML}
+                  <div class="item-summary-text">
+                     <h4>${epp.tipo} - ${epp.marca}</h4>
+                     <p>${descripcionPreview}</p>
+                  </div>
+                  <span class="item-toggle">▼</span>
+               </div>
+               <div class="item-details">
+                  <div class="item-details-inner">
+                     <p><strong>Talla:</strong> ${epp.talla || 'N/A'}</p>
+                     <p><strong>Cantidad:</strong> ${epp.cantidad}</p>
+                     ${epp.descripcion ? `<p><strong>Descripción:</strong> ${epp.descripcion}</p>` : ''}
+                     <div class="item-actions">
+                        <button class="item-edit" onclick="editarEPP(${index})">✏️ Editar</button>
+                        <button class="item-delete" onclick="eliminarEPP(${index})">🗑️ Eliminar</button>
+                     </div>
+                  </div>
+               </div>
+            `;
+            listaEPP.appendChild(itemCard);
+         });
+      }
+
+      // Toggle formulario (accordion)
+      function toggleFormulario(id) {
+         const elemento = document.getElementById(id);
+         elemento.classList.toggle('active');
+      }
+
+      // Toggle detalle de un item de la lista
+      function toggleItemDetalle(summaryEl) {
+         const card = summaryEl.closest('.item-card-c');
+         if (card) card.classList.toggle('expanded');
+      }
+
+      // Editar EPP
+      function editarEPP(index) {
+         const epps = JSON.parse(localStorage.getItem('epps-gatun') || '[]');
+         const epp = epps[index];
+
+         // Llenar formulario
+         document.getElementById('tipo-epp').value = epp.tipo;
+         document.getElementById('marca-epp').value = epp.marca;
+         document.getElementById('talla-epp').value = epp.talla;
+         document.getElementById('cantidad-epp').value = epp.cantidad;
+         document.getElementById('descripcion-epp').value = epp.descripcion;
+
+         // Cambiar botón a "Actualizar"
+         document.getElementById('btn-submit-epp').textContent = '💾 Actualizar EPP';
+         editandoIndex = index;
+
+         // Desplegar formulario y hacer scroll al botón
+         const formEl = document.getElementById('form-epp');
+         if (!formEl.classList.contains('active')) toggleFormulario('form-epp');
+         document.querySelector('.btn-add-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      // Agregar/Actualizar EPP
+      document.getElementById('formulario-epp').addEventListener('submit', function(e) {
+         e.preventDefault();
+
+         const fotoInput = document.getElementById('foto-epp');
+         const epps = JSON.parse(localStorage.getItem('epps-gatun') || '[]');
+
+         const epp = {
+            tipo: document.getElementById('tipo-epp').value,
+            marca: document.getElementById('marca-epp').value,
+            talla: document.getElementById('talla-epp').value,
+            cantidad: document.getElementById('cantidad-epp').value,
+            descripcion: document.getElementById('descripcion-epp').value,
+            foto: epps[editandoIndex]?.foto || null
+         };
+
+         // Si hay nueva foto
+         if (fotoInput.files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+               epp.foto = e.target.result;
+               guardarEPP(epps, epp);
+            };
+            reader.readAsDataURL(fotoInput.files[0]);
+         } else {
+            guardarEPP(epps, epp);
+         }
+      });
+
+      function guardarEPP(epps, epp) {
+         if (editandoIndex !== null) {
+            epps[editandoIndex] = epp;
+            alert('✅ EPP actualizado correctamente');
+         } else {
+            epps.push(epp);
+            alert('✅ EPP agregado correctamente');
+         }
+
+         localStorage.setItem('epps-gatun', JSON.stringify(epps));
+         document.getElementById('formulario-epp').reset();
+         document.getElementById('btn-submit-epp').textContent = '➕ Agregar EPP';
+         editandoIndex = null;
+         cancelarEdicion();
+         cargarEPP();
+      }
+
+      // Cancelar edición
+      function cancelarEdicion() {
+         document.getElementById('formulario-epp').reset();
+         document.getElementById('btn-submit-epp').textContent = '➕ Agregar EPP';
+         editandoIndex = null;
+         const formContent = document.getElementById('form-epp');
+         if (formContent.classList.contains('active')) {
+            toggleFormulario('form-epp');
+         }
+      }
+
+      // Eliminar EPP
+      function eliminarEPP(index) {
+         eppActual = index;
+         document.getElementById('modal-title').textContent = 'Eliminar EPP';
+         document.getElementById('modal-message').textContent = '¿Estás seguro de que quieres eliminar este EPP?';
+         document.getElementById('modal-confirm').onclick = function() {
+            const epps = JSON.parse(localStorage.getItem('epps-gatun') || '[]');
+            epps.splice(eppActual, 1);
+            localStorage.setItem('epps-gatun', JSON.stringify(epps));
+            cerrarModal();
+            cargarEPP();
+         };
+         abrirModal();
+      }
+
+      function abrirModal() {
+         document.getElementById('modal').classList.add('active');
+      }
+
+      function cerrarModal() {
+         document.getElementById('modal').classList.remove('active');
+      }
+
+      // Inicializar
+      document.addEventListener('DOMContentLoaded', cargarEPP);
+   </script>
+
+</body>
+</html>

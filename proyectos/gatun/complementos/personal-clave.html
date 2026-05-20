@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Personal Clave - Gatún</title>
+   <link rel="stylesheet" href="css/complementos.css">
+</head>
+<body>
+
+   <!-- ══════════════════ NAVBAR ══════════════════ -->
+   <nav class="navbar">
+      <div class="navbar-brand">
+         <a href="index.html" class="back-btn">◀ Volver</a>
+         <div>
+            <div class="logo-text">👥 Personal Clave</div>
+            <div class="logo-sub">Esclusa de Gatún</div>
+         </div>
+      </div>
+   </nav>
+
+   <!-- ══════════════════ CONTENIDO ══════════════════ -->
+   <div class="main-content">
+      <div class="detail-container">
+         <div class="detail-header">
+            <h2>Personal Clave</h2>
+            <p>Registra operadores, supervisores y personal responsable de las maniobras.</p>
+         </div>
+
+         <!-- Botón para agregar personal -->
+         <button class="btn-add-form" onclick="toggleFormulario('form-personal')">
+            ➕ Agregar Nuevo Personal
+         </button>
+
+         <!-- Formulario para agregar/editar personal (Colapsable) -->
+         <div class="form-section" style="padding: 0; margin-bottom: 24px;">
+            <div class="form-content" id="form-personal">
+               <form id="formulario-personal">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                     <div class="form-group">
+                        <label>Nombre Completo *</label>
+                        <input type="text" id="nombre-personal" placeholder="Ej: Juan Pérez" required>
+                     </div>
+
+                     <div class="form-group">
+                        <label>Cargo/Posición *</label>
+                        <select id="cargo-personal" required>
+                           <option value="">Selecciona un cargo...</option>
+                           <option value="Operador">Operador</option>
+                           <option value="Supervisor">Supervisor</option>
+                           <option value="Jefe de Operaciones">Jefe de Operaciones</option>
+                           <option value="Electricista">Electricista</option>
+                           <option value="Técnico">Técnico</option>
+                           <option value="Inspector">Inspector</option>
+                           <option value="Otro">Otro</option>
+                        </select>
+                     </div>
+
+                     <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" id="telefono-personal" placeholder="+507 6000-0000">
+                     </div>
+
+                     <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="email-personal" placeholder="correo@acp.gob.pa">
+                     </div>
+                  </div>
+
+                  <div class="form-group">
+                     <label>Especialidad / Certificaciones</label>
+                     <textarea id="especialidad-personal" placeholder="Ej: Certificado en maniobras de alta tensión, experiencia 15 años"></textarea>
+                  </div>
+
+                  <div class="form-buttons">
+                     <button type="submit" class="btn btn-primary" id="btn-submit-personal">➕ Agregar Personal</button>
+                     <button type="reset" class="btn btn-secondary">🔄 Limpiar</button>
+                     <button type="button" class="btn btn-secondary" onclick="cancelarEdicion()">✕ Cancelar</button>
+                  </div>
+               </form>
+            </div>
+         </div>
+
+         <!-- Lista de personal -->
+         <div class="form-section">
+            <h3>Personal Registrado</h3>
+            <div id="lista-personal" class="items-list"></div>
+         </div>
+      </div>
+   </div>
+
+   <!-- ══════════════════ FOOTER ══════════════════ -->
+   <div class="footer">
+      Autoridad del Canal de Panamá — Complementos de Maniobras
+   </div>
+
+   <!-- ══════════════════ MODAL ══════════════════ -->
+   <div id="modal" class="modal">
+      <div class="modal-content">
+         <h3 id="modal-title">Confirmar acción</h3>
+         <p id="modal-message"></p>
+         <div class="modal-buttons">
+            <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+            <button id="modal-confirm" class="btn btn-danger">Eliminar</button>
+         </div>
+      </div>
+   </div>
+
+   <script src="js/auth.js"></script>
+   <script>
+      // Variables globales
+      let personalActual = null;
+      let editandoIndex = null;
+
+      // Cargar personal desde localStorage
+      function cargarPersonal() {
+         const personal = JSON.parse(localStorage.getItem('personal-gatun') || '[]');
+         const listaPersonal = document.getElementById('lista-personal');
+
+         listaPersonal.innerHTML = '';
+
+         if (personal.length === 0) {
+            listaPersonal.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👤</div><p>No hay personal registrado aún</p></div>';
+            return;
+         }
+
+         personal.forEach((persona, index) => {
+            const itemCard = document.createElement('div');
+            itemCard.className = 'item-card';
+            itemCard.innerHTML = `
+               <div class="item-info">
+                  <h4>${persona.nombre}</h4>
+                  <p><strong>Cargo:</strong> ${persona.cargo}</p>
+                  ${persona.telefono ? `<p><strong>Teléfono:</strong> ${persona.telefono}</p>` : ''}
+                  ${persona.email ? `<p><strong>Email:</strong> ${persona.email}</p>` : ''}
+                  ${persona.especialidad ? `<p><strong>Especialidad:</strong> ${persona.especialidad}</p>` : ''}
+               </div>
+               <div class="item-actions">
+                  <button class="item-edit" onclick="editarPersonal(${index})">✏️ Editar</button>
+                  <button class="item-delete" onclick="eliminarPersonal(${index})">🗑️ Eliminar</button>
+               </div>
+            `;
+            listaPersonal.appendChild(itemCard);
+         });
+      }
+
+      // Toggle formulario
+      function toggleFormulario(id) {
+         const elemento = document.getElementById(id);
+         elemento.classList.toggle('active');
+      }
+
+      // Editar personal
+      function editarPersonal(index) {
+         const personal = JSON.parse(localStorage.getItem('personal-gatun') || '[]');
+         const persona = personal[index];
+
+         document.getElementById('nombre-personal').value = persona.nombre;
+         document.getElementById('cargo-personal').value = persona.cargo;
+         document.getElementById('telefono-personal').value = persona.telefono;
+         document.getElementById('email-personal').value = persona.email;
+         document.getElementById('especialidad-personal').value = persona.especialidad;
+
+         document.getElementById('btn-submit-personal').textContent = '💾 Actualizar Personal';
+         editandoIndex = index;
+
+         const formEl = document.getElementById('form-personal');
+         if (!formEl.classList.contains('active')) toggleFormulario('form-personal');
+         document.querySelector('.btn-add-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      // Agregar/Actualizar personal
+      document.getElementById('formulario-personal').addEventListener('submit', function(e) {
+         e.preventDefault();
+
+         const personal = JSON.parse(localStorage.getItem('personal-gatun') || '[]');
+
+         const persona = {
+            nombre: document.getElementById('nombre-personal').value,
+            cargo: document.getElementById('cargo-personal').value,
+            telefono: document.getElementById('telefono-personal').value,
+            email: document.getElementById('email-personal').value,
+            especialidad: document.getElementById('especialidad-personal').value
+         };
+
+         if (editandoIndex !== null) {
+            personal[editandoIndex] = persona;
+            alert('✅ Personal actualizado correctamente');
+         } else {
+            personal.push(persona);
+            alert('✅ Personal agregado correctamente');
+         }
+
+         localStorage.setItem('personal-gatun', JSON.stringify(personal));
+         document.getElementById('formulario-personal').reset();
+         document.getElementById('btn-submit-personal').textContent = '➕ Agregar Personal';
+         editandoIndex = null;
+         cancelarEdicion();
+         cargarPersonal();
+      });
+
+      // Cancelar edición
+      function cancelarEdicion() {
+         document.getElementById('formulario-personal').reset();
+         document.getElementById('btn-submit-personal').textContent = '➕ Agregar Personal';
+         editandoIndex = null;
+         const formContent = document.getElementById('form-personal');
+         if (formContent.classList.contains('active')) {
+            toggleFormulario('form-personal');
+         }
+      }
+
+      // Eliminar personal
+      function eliminarPersonal(index) {
+         personalActual = index;
+         document.getElementById('modal-title').textContent = 'Eliminar Personal';
+         document.getElementById('modal-message').textContent = '¿Estás seguro de que quieres eliminar este personal?';
+         document.getElementById('modal-confirm').onclick = function() {
+            const personal = JSON.parse(localStorage.getItem('personal-gatun') || '[]');
+            personal.splice(personalActual, 1);
+            localStorage.setItem('personal-gatun', JSON.stringify(personal));
+            cerrarModal();
+            cargarPersonal();
+         };
+         abrirModal();
+      }
+
+      function abrirModal() {
+         document.getElementById('modal').classList.add('active');
+      }
+
+      function cerrarModal() {
+         document.getElementById('modal').classList.remove('active');
+      }
+
+      // Inicializar
+      document.addEventListener('DOMContentLoaded', cargarPersonal);
+   </script>
+
+</body>
+</html>
